@@ -65,7 +65,7 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Dashboard from "./Dashboard.jsx";
 import PlanedProjecrMainNavbar from './Dashboard/PlanedProjecrMainNavbar.jsx';
-import NewCustomerEntry from './NewCustomerEntry.jsx';
+import NewCustomerEntry from './Masters/NewCustomerEntry.jsx';
 import Sales from './Transactions/Sales.jsx';
 import Purchase from "./Transactions/Purchase.jsx";
 import PrintPage from "./Transactions/PrintPage.jsx";
@@ -76,6 +76,12 @@ import Payment from './Transactions/Payment.jsx'
 import Repor from './RportPages/Repor.jsx';
 import SalesReturn from './Transactions/SalesReturn.jsx'
 import PurReturn from "./Transactions/PurReturn.jsx";
+import AllLedgers from './Masters/AllLedgers.jsx'
+import Expenses from './Expenses.jsx'
+import Nav from './Transactions/Nav.jsx'
+
+// import NewCustomerEntry from "./Masters/NewCustomerEntry.jsx";
+// import AllLedgers from "./Masters/AllLedgers.jsx";
 
 export default function App() {
     return (
@@ -96,6 +102,9 @@ export default function App() {
                 <Route path="/Repor" element={<Repor/>}/>
                 <Route path="/SalesReturn" element={<SalesReturn/>}/>
                 <Route path="/PurReturn" element={<PurReturn/>}/>
+                <Route path="/AllLedgers" element={<AllLedgers/>}/>
+                <Route path="/Expenses" element={<Expenses/>}/>
+                <Route path="/Nav" element={<Nav/>}/>
 
                 
                 {/* 🔍 Optional Catch-All: Displays if any other route is missing */}
