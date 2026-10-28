@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 // import NewCustomerEntry from "../NewCustomerEntry";
 // import {newContext} from '../NewCustomerEntry'
 
-export default function AllLedgers(){
+export default function AllLedgers({ allCustomerInfo }){
     // const myCon = useContext(newContext);
-    const [name, setName] = useState('');
+    // const [name, setName] = useState('');
     return(
         <section>
             <div className="flex justify-between m-5 border-b pb-2">
@@ -49,15 +49,23 @@ export default function AllLedgers(){
                         ))
                     }
                 </tbody> */}
+
+                <tbody>
+                    {
+                    allCustomerInfo.map((item, index) => (
+                        <tr key={item.id} className="text-center border-b">
+                            <td className="py-2">{index + 1}</td>
+                            <td className="py-2">{item.name}</td>
+                            <td className="py-2">{item.phone}</td>
+                            <td className="py-2">{item.area}</td>
+                            <td className="py-2">{item.address}</td>
+                            <td className="py-2">Customer</td>
+                        </tr>
+                    ))
+                    };
+            </tbody>
                 
             </table>
-            <div>
-                <h1>Customer Name</h1>
-                <input type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)} />
-                <p>customer name: {name}</p>
-             </div>
         </section>
     );
 }

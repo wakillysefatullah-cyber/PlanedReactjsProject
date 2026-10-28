@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-export default function SalesReturn(){
+export default function SalesReturn({productName, setProductName}){
     const [name, setName] = useState('');
     const [qty, setQty] = useState(0);
     const [price, setPrice] = useState(0);
     const [company, setCompany] = useState('');
     const [edit, setEdit] = useState('');
-    const [all, setAll] = useState([]);
+    // const [all, setAll] = useState([]);
 
     const SalesReturnFunction = (e)=> {
         e.preventDefault();
@@ -20,6 +20,35 @@ export default function SalesReturn(){
             alert('Please, fill out all fields');
             return;
         }
+        // handleProduct 
+        const productName = productName.find(
+            (item)=> item.id === Number(productName)
+        )
+        if(!productName || qty <= 0 || Number.isInteger(Number(qty))){
+            alert('please, enter a valid number!');
+            return;
+        }
+        if(Number(qty) > productName.qty){
+            alert('Not, enough quantity');
+            return;
+        }
+        setProductName((prevProduct)=>
+        prevProduct.map((item)=>
+        item.name === Number(name) ? {...item, qty : item.qty - Number(qty)}:item))
+        alert('sale completed!');
+        return;
+
+         <select
+        value={name}
+        onChange={(e) => setProductName(e.target.value)}
+      >
+        {productName.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.name} — Stock: {item.qty}
+          </option>
+        ))}
+      </select>
+
         // creating new object
         const newReturn = {
             id:Date.now(),
@@ -30,7 +59,7 @@ export default function SalesReturn(){
         }
 
         // save states
-        setAll((all)=>[...all, newReturn]);
+        setProductName((productName)=>[...productName, newReturn]);
         setName('');
         setQty('');
         setPrice('');
@@ -47,8 +76,8 @@ export default function SalesReturn(){
     }
 // handle delete function 
 const handleDelete = (id)=>{
-    setAll(
-        (all)=> all.filter((item)=> item.id !==id)
+    setProductName(
+        (productName)=> productName.filter((item)=> item.id !==id)
     )
 }
     return(
@@ -146,7 +175,7 @@ const handleDelete = (id)=>{
                         </thead>
                         <tbody>
                                {
-                                   all.map((returnItem, index)=>{
+                                   setProductName.map((returnItem, index)=>{
                                     const tl = Number(returnItem.qty) * Number(returnItem.price);
                                    return <tr key={index.id} className="border-b hover:bg-olive-300 hover:scale-101
                                    duration-200">
@@ -178,3 +207,7 @@ const handleDelete = (id)=>{
         </section>
     );
 }
+
+
+
+

@@ -1,13 +1,13 @@
 import {useState } from "react";
 import { Link } from "react-router-dom";
 
-export default function NewCustomerEntry({children}){
+export default function NewCustomerEntry({allCustomerInfo, setAllCustomerInfo}){
 
     const [CustomerName, setCustomerName] = useState();
     const [CustomerPhonne, setCustomerPhone] = useState();
     const [CustomerArea, setCustomerArea] = useState();
     const [CustomerAddress, setCustomerAddress] = useState();
-    const [AllCusomerInfo, setAllCustomerInfo] = useState([]);
+    // const [AllCusomerInfo, setAllCustomerInfo] = useState([]);
     
     const AddCustomer = (e)=>{
         e.preventDefault();
@@ -24,7 +24,8 @@ export default function NewCustomerEntry({children}){
             area:CustomerArea,
             address:CustomerAddress
         }
-        setAllCustomerInfo([...AllCusomerInfo, newCustomer]);
+        // setAllCustomerInfo([...AllCusomerInfo, newCustomer]);
+        setAllCustomerInfo(previousCustomers => [...previousCustomers, newCustomer]);
         setCustomerName("");
         setCustomerPhone("");
         setCustomerArea("");
@@ -123,7 +124,7 @@ export default function NewCustomerEntry({children}){
                 </thead>
                 <tbody >
                     {
-                        AllCusomerInfo.map((item, index)=>(
+                        allCustomerInfo.map((item, index)=>(
                                 <tr key={item.id} className="px-5 text-center border-b">
                                     <td className="py-2">{index + 1}</td>
                                     <td className="py-2">{item.name}</td>

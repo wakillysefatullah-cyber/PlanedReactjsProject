@@ -72,10 +72,6 @@ export default function Dashboard(){
                     duration-300 text-white font-bold font-serif">
                         <Link to="/Repor">Reports</Link>
                     </li>
-                    <li className="hover:bg-slate-900 px-4 text-lg py-1 block rounded-md 
-                    duration-300 text-white font-bold font-serif">
-                        <Link to="/Nav">Nav</Link>
-                    </li>
                     
                 </ul>
                 <div className="mt-36">
