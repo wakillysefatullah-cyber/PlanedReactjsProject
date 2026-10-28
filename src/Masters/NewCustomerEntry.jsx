@@ -6,7 +6,7 @@ import {
     createLedger,
     updateLedger,
     deleteLedger
-} from "./api/ledgerApi";
+} from "../api/ledgerApi";
 
 export default function NewCustomerEntry() {
     const [CustomerName, setCustomerName] = useState("");
