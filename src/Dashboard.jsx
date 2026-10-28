@@ -20,7 +20,7 @@ export default function Dashboard(){
                         <ul className="absolute top-full scale-y-0 origin-top group-hover:scale-y-100
                         duration-300 bg-slate-950 line-clamp-5 right-0 p-4 gap-y-2 flex flex-col z-50">
                             <li className="hover:bg-slate-700 px-1 py-1 rounded-md text-md">
-                                <Link >All Ledgers</Link>
+                                <Link to={'/AllLedgers'}>All Ledgers</Link>
                             </li>
                             <li className="hover:bg-slate-700 px-1 py-1 rounded-md text-md">
                                 <Link to="/NewCustomerEntry">New Ledger</Link>

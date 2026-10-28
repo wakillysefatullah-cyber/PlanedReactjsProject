@@ -13,8 +13,6 @@ import { InventoryProvider } from "./context/InventoryContext";
 
 createRoot(document.getElementById("root")).render(
     <StrictMode>
-        <InventoryProvider>
             <App />
-        </InventoryProvider>
     </StrictMode>
 );
