@@ -1,11 +1,10 @@
 import { useContext, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 // import NewCustomerEntry from "../NewCustomerEntry";
 // import {newContext} from '../NewCustomerEntry'
 
 export default function AllLedgers({ allCustomerInfo }){
-    // const myCon = useContext(newContext);
-    // const [name, setName] = useState('');
+    const navigate = useNavigate();
     return(
         <section>
             <div className="flex justify-between m-5 border-b pb-2">
@@ -15,8 +14,12 @@ export default function AllLedgers({ allCustomerInfo }){
                         <p>Manage your all ledgers professionally</p>
                     </div>
                 </div>
-                    <Link to={'/'} className="bg-black text-white px-6 py-1 text-center text-xl
-                    font-bold font-serif rounded-md">{`<<Back`}</Link>
+                    <Link to="/"
+                        className="bg-black text-white px-8 py-1 text-center text-lg
+                         font-bold font-serif rounded-md flex justify-center items-center"
+                    >
+                        {`<<Back`}
+                    </Link>
             </div>
             <table className="w-full">
                 <thead className="bg-olive-400 px-5">
@@ -29,37 +32,26 @@ export default function AllLedgers({ allCustomerInfo }){
                         <th className="py-2">Action</th>
                     </tr>
                 </thead>
-                
-                {/* <tbody >
-                    {
-                        myCon.map((item, index)=>(
-                                <tr key={item.id} className="px-5 text-center border-b">
-                                    <td className="py-2">{index + 1}</td>
-                                    <td className="py-2">{item.name}</td>
-                                    <td className="py-2">{item.phone}</td>
-                                    <td className="py-2">{item.area}</td>
-                                    <td className="py-2">{item.address}</td>
-                                    <td >
-                                        <button onClick={()=>EditingFunction(item)} 
-                                        className="px-4 py-1 rounded-md m-2 text-white bg-olive-800">Edit</button>
-                                        <button onClick={()=>handleDelete(item.id)}
-                                        className="px-4 py-1 rounded-md text-white bg-olive-800">Delete</button>
-                                    </td>
-                                </tr>
-                        ))
-                    }
-                </tbody> */}
-
                 <tbody>
                     {
                     allCustomerInfo.map((item, index) => (
-                        <tr key={item.id} className="text-center border-b">
+                        <tr key={item.id}
+                        onClick={()=> navigate(`/ledger/${item.id}`, {state: {ledger:item}})}
+                         className="text-center border-b cursor-pointer">
                             <td className="py-2">{index + 1}</td>
                             <td className="py-2">{item.name}</td>
                             <td className="py-2">{item.phone}</td>
                             <td className="py-2">{item.area}</td>
                             <td className="py-2">{item.address}</td>
-                            <td className="py-2">Customer</td>
+                            <td className="py-2 ">
+                                <button onClick={(event) => event.stopPropagation()} 
+                                className=" font-bold font-serif bg-olive-800
+                                px-3 py-1 rounded-md text-white">Edit</button>
+
+                                <button onClick={(event) => event.stopPropagation()}
+                                className=" font-bold font-serif bg-olive-800
+                                px-3 py-1 rounded-md text-white ml-2">Delete</button>
+                            </td>
                         </tr>
                     ))
                     };

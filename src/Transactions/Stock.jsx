@@ -309,21 +309,21 @@ export default function Stock() {
 
     return (
         <section className="w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-3xl font-bold">Stock</h1>
-                    <p className="text-gray-500">
-                        Manage your available inventory.
-                    </p>
-                </div>
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-3xl font-bold">Stock</h1>
+                        <p className="text-gray-500">
+                            Manage your available inventory.
+                        </p>
+                    </div>
 
-                <Link
-                    to="/"
-                    className="bg-black text-white px-5 py-2 rounded-md"
-                >
-                    &lt;&lt; Back
-                </Link>
-            </div>
+                    <Link
+                        to="/"
+                        className="bg-black text-white px-5 py-2 rounded-md"
+                    >
+                        &lt;&lt; Back
+                    </Link>
+                </div>
 
             {/* Inventory summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">

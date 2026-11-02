@@ -146,11 +146,16 @@ import SalesReturn from "./Transactions/SalesReturn.jsx";
 import PurReturn from "./Transactions/PurReturn.jsx";
 import AllLedgers from "./Masters/AllLedgers.jsx";
 import Expenses from "./Expenses.jsx";
+import LedgerAccount from "./Masters/LedgerAccount.jsx";
 import Nav from "./Transactions/Nav.jsx";
 
+
 import { InventoryProvider } from "./context/InventoryContext.jsx";
+import { useState } from "react";
 
 export default function App() {
+    const [allCustomerInfo, setAllCustomerInfo] = useState([]);
+    const [productName, setProductName] = useState([]);
     return (
         <InventoryProvider>
             <Router>
@@ -164,9 +169,11 @@ export default function App() {
 
                     <Route
                         path="/NewCustomerEntry"
-                        element={<NewCustomerEntry />}
+                        element={<NewCustomerEntry allCustomerInfo={allCustomerInfo}
+                        setAllCustomerInfo={setAllCustomerInfo}/>}
                     />
 
+                    <Route path="/Ledger/:id" element={<LedgerAccount/>}/>
                     <Route path="/Sales" element={<Sales />} />
 
                     <Route path="/Purchases" element={<Purchase />} />
@@ -181,11 +188,11 @@ export default function App() {
 
                     <Route path="/Repor" element={<Repor />} />
 
-                    <Route path="/SalesReturn" element={<SalesReturn />} />
+                    <Route path="/SalesReturn" element={<SalesReturn productName={productName} setProductName={setProductName}/>} />
 
                     <Route path="/PurReturn" element={<PurReturn />} />
 
-                    <Route path="/AllLedgers" element={<AllLedgers />} />
+                    <Route path="/AllLedgers" element={<AllLedgers allCustomerInfo={allCustomerInfo} />} />
 
                     <Route path="/Expenses" element={<Expenses />} />
 

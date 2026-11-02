@@ -1,19 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-    getLedgers,
-    createLedger,
-    updateLedger,
-    deleteLedger
-} from "../api/ledgerApi";
+import {getLedgers, createLedger, updateLedger, deleteLedger} from "../api/ledgerApi";
 
-export default function NewCustomerEntry() {
+export default function NewCustomerEntry({allCustomerInfo, setAllCustomerInfo}) {
     const [CustomerName, setCustomerName] = useState("");
     const [CustomerPhonne, setCustomerPhone] = useState("");
     const [CustomerArea, setCustomerArea] = useState("");
     const [CustomerAddress, setCustomerAddress] = useState("");
-    const [AllCusomerInfo, setAllCustomerInfo] = useState([]);
+    // const [AllCusomerInfo, setAllCustomerInfo] = useState([]);
 
     const [search, setSearch] = useState("");
     const [editingId, setEditingId] = useState(null);
@@ -283,7 +278,7 @@ export default function NewCustomerEntry() {
                 </thead>
 
                 <tbody>
-                    {!loading && AllCusomerInfo.map((item, index) => (
+                    {!loading && allCustomerInfo.map((item, index) => (
                         <tr key={item.id} className="px-5 text-center border-b">
                             <td className="py-2">{index + 1}</td>
                             <td className="py-2">{item.name}</td>
@@ -310,7 +305,7 @@ export default function NewCustomerEntry() {
                         </tr>
                     ))}
 
-                    {!loading && AllCusomerInfo.length === 0 && !error && (
+                    {!loading && allCustomerInfo.length === 0 && !error && (
                         <tr>
                             <td colSpan="6" className="py-4 text-center">
                                 No ledgers found.

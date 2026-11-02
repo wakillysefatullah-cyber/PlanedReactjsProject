@@ -46,7 +46,7 @@ export default function PlanedProjecrMainBody(){
                      className="mr-10" alt="can not load image" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-bold font-serif">Cash Balnace</h1>
+                    <h1 className="text-xl font-bold font-serif">Cash Balance</h1>
                     <p className="font-bold text-2xl text-emerald-500"><q>9000</q></p>
                     <p className=" font-serif text-end">AF</p>
                 </div>

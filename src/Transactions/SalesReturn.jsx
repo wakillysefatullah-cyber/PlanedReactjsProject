@@ -21,9 +21,7 @@ export default function SalesReturn({productName, setProductName}){
             return;
         }
         // handleProduct 
-        const productName = productName.find(
-            (item)=> item.id === Number(productName)
-        )
+        const productName = productName.find((item)=> item.id === Number(productName))
         if(!productName || qty <= 0 || Number.isInteger(Number(qty))){
             alert('please, enter a valid number!');
             return;
@@ -175,7 +173,7 @@ const handleDelete = (id)=>{
                         </thead>
                         <tbody>
                                {
-                                   setProductName.map((returnItem, index)=>{
+                                   productName.map((returnItem, index)=>{
                                     const tl = Number(returnItem.qty) * Number(returnItem.price);
                                    return <tr key={index.id} className="border-b hover:bg-olive-300 hover:scale-101
                                    duration-200">
@@ -186,11 +184,9 @@ const handleDelete = (id)=>{
                                             <td className="py-1 text-lg">{returnItem.company}</td>
                                             <tr className="py-1 text-lg">{tl}</tr>
                                             <td className="py-1 text-lg">
-                                                <button
-                                                    type="button"
+                                                <button type="button"
                                                     className="bg-black text-white mr-2 px-4 py-1 rounded-md"
-                                                    onClick={() => EditingFunction()}
-                                                >
+                                                    onClick={() => EditingFunction()}>
                                                     Edit
                                                 </button>
                                                 <button type="button"
