@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useInventory } from "../context/InventoryContext.jsx";
 
-export default function Sales() {
+export default function Sales({sales, setSales}) {
     const { stock, removeStock } = useInventory();
 
     const [customer, setCustomer] = useState("");
@@ -12,7 +12,7 @@ export default function Sales() {
     const [price, setPrice] = useState("");
     const [paid, setPaid] = useState(0);
     const [borrow, setBorrow] = useState(null);
-    const [sales, setSales] = useState(() => {
+          [sales, setSales] = useState(() => {
         try {
             const savedSales = localStorage.getItem("easycount-sales");
             return savedSales ? JSON.parse(savedSales) : [];

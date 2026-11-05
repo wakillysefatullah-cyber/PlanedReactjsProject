@@ -147,7 +147,7 @@ import PurReturn from "./Transactions/PurReturn.jsx";
 import AllLedgers from "./Masters/AllLedgers.jsx";
 import Expenses from "./Expenses.jsx";
 import LedgerAccount from "./Masters/LedgerAccount.jsx";
-import Nav from "./Transactions/Nav.jsx";
+import ShowEachSaleReport from "./RportPages/ShowEachSaleReport.jsx";
 
 
 import { InventoryProvider } from "./context/InventoryContext.jsx";
@@ -156,6 +156,7 @@ import { useState } from "react";
 export default function App() {
     const [allCustomerInfo, setAllCustomerInfo] = useState([]);
     const [productName, setProductName] = useState([]);
+    const [sales, setSales] = useState([]);
     return (
         <InventoryProvider>
             <Router>
@@ -174,7 +175,7 @@ export default function App() {
                     />
 
                     <Route path="/Ledger/:id" element={<LedgerAccount/>}/>
-                    <Route path="/Sales" element={<Sales />} />
+                    <Route path="/Sales" element={<Sales sales={sales} setSales={setSales}/>} />
 
                     <Route path="/Purchases" element={<Purchase />} />
 
@@ -195,8 +196,7 @@ export default function App() {
                     <Route path="/AllLedgers" element={<AllLedgers allCustomerInfo={allCustomerInfo} />} />
 
                     <Route path="/Expenses" element={<Expenses />} />
-
-                    <Route path="/Nav" element={<Nav />} />
+                    <Route path="/ShowEachSaleReport" element={<ShowEachSaleReport sales={sales}/>}/>
 
                     <Route
                         path="*"

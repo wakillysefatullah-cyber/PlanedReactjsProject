@@ -24,13 +24,20 @@ export default function LedgerAccount() {
                         Account ID: {id}
                     </p>
                 </div>
-
-                <Link
-                    to="/AllLedgers"
-                    className="bg-black text-white px-8 py-2 text-xl font-bold font-serif rounded-md"
-                >
-                    {`<<Back`}
-                </Link>
+                <div className="flex gap-4">
+                    <Link to={'/Sales'} className="bg-black text-white px-8 py-2 text-xl font-bold font-serif rounded-md">
+                    Sales
+                    </Link>
+                    <Link to={'/Purchases'} className="bg-black text-white px-8 py-2 text-xl font-bold font-serif rounded-md">
+                        Purchase
+                    </Link>
+                    <Link
+                        to="/AllLedgers"
+                        className="bg-black text-white px-8 py-2 text-xl font-bold font-serif rounded-md"
+                    >
+                        {`<<Back`}
+                    </Link>
+                </div>
 
             </div>
 

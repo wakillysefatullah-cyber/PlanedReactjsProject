@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import ShowEachReport from "./ShowEachSaleReport";
 export default function Repor(){
 
     return(
@@ -24,9 +25,11 @@ export default function Repor(){
                             14000 Af
                         </p>
                     </div>
-                    <button className="font-bold font-serif bg-black rounded-md px-5 py-2
-                    text-white">Report</button>
-                </div>
+                    <Link to={'/ShowEachSaleReport'} className="font-bold font-serif bg-black rounded-md px-5 py-2
+                    text-white">
+                        Report
+                    </Link>
+                    </div>
                 {/* purchase  */}
                 <div className="flex flex-col gap-5">
                     <div className="flex flex-col w-70 h-36 gap-5 hover:outline p-2

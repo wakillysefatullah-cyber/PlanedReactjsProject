@@ -3,17 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-
-"scripts": {
-  "dev": "vite",
-  "start:backend": "cd backend && mvnw.cmd spring-boot:run",
-  "start:all": "concurrently -k -n BACKEND,FRONTEND \"npm run start:backend\" \"npm run dev\"",
-  "build": "vite build",
-  "lint": "eslint .",
-  "preview": "vite preview"
-},
+  "scripts": {
+    "dev": "vite",
+    "start:backend": "cd backend && mvnw.cmd spring-boot:run",
+    "start:all": "node scripts/start-all.cjs",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "lucide-react": "^1.67.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",

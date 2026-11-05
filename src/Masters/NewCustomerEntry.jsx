@@ -8,7 +8,6 @@ export default function NewCustomerEntry({allCustomerInfo, setAllCustomerInfo}) 
     const [CustomerPhonne, setCustomerPhone] = useState("");
     const [CustomerArea, setCustomerArea] = useState("");
     const [CustomerAddress, setCustomerAddress] = useState("");
-    // const [AllCusomerInfo, setAllCustomerInfo] = useState([]);
 
     const [search, setSearch] = useState("");
     const [editingId, setEditingId] = useState(null);

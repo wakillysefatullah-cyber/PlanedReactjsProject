@@ -1,7 +1,5 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import NewCustomerEntry from "../NewCustomerEntry";
-// import {newContext} from '../NewCustomerEntry'
 
 export default function AllLedgers({ allCustomerInfo }){
     const navigate = useNavigate();
