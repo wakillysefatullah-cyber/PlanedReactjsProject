@@ -10,10 +10,13 @@ public record SaleResponse(
         String ledgerName,
         LocalDate invoiceDate,
         BigDecimal total,
+        BigDecimal paid,
+        BigDecimal borrow,
         String notes,
         List<Line> items) {
 
     public record Line(
+            Long saleItemId,
             Long itemId,
             String itemName,
             String batchNo,

@@ -1,4 +1,3 @@
-
 package com.easycount.dto;
 
 import java.math.BigDecimal;
@@ -13,11 +12,13 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 public record SaleRequest(
 
-    @NotNull
-    @Positive
+    @NotNull @Positive
     Long ledgerId,
 
-    LocalDate invoiceDate,
+    LocalDate invoiceDate,      // optional, defaults to today
+
+    @PositiveOrZero
+    BigDecimal paid,            // optional, defaults to 0
 
     String notes,
 
@@ -27,18 +28,16 @@ public record SaleRequest(
 ) {
     public record Line(
 
-        @NotNull
-        @Positive
+        @NotNull @Positive
         Long itemId,
 
         String batchNo,
 
-        @NotNull
-        @Positive
-        Integer qty,
+        // BigDecimal: the DB column is NUMERIC(14,3), so kg/litre quantities work
+        @NotNull @Positive
+        BigDecimal qty,
 
-        @NotNull
-        @PositiveOrZero
+        @NotNull @PositiveOrZero
         BigDecimal price
 
     ) {}

@@ -1,49 +1,81 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useInventory } from "../context/InventoryContext.jsx";
 
-export default function Sales({sales, setSales}) {
-    const { stock, removeStock } = useInventory();
+import { getLedgers } from "../api/ledgerApi";
+import { itemApi } from "../api/itemApi";
+import { createSale, getSales } from "../api/saleApi";
 
-    const [customer, setCustomer] = useState("");
-    const [productName, setProductName] = useState("");
+export default function Sales() {
+    const [ledgers, setLedgers] = useState([]);
+    const [items, setItems] = useState([]);
+    const [sales, setSales] = useState([]);
+
+    const [customerId, setCustomerId] = useState("");
+    const [itemId, setItemId] = useState("");
     const [quantity, setQuantity] = useState("");
     const [price, setPrice] = useState("");
-    const [paid, setPaid] = useState(0);
-    const [borrow, setBorrow] = useState(null);
-          [sales, setSales] = useState(() => {
+    const [paid, setPaid] = useState("");
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+
+    async function loadData() {
         try {
-            const savedSales = localStorage.getItem("easycount-sales");
-            return savedSales ? JSON.parse(savedSales) : [];
-        } catch {
-            return [];
+            setError("");
+
+            const [ledgerData, itemData, saleData] = await Promise.all([
+                getLedgers(),
+                itemApi.getAll(),
+                getSales(),
+            ]);
+
+            setLedgers(ledgerData);
+            setItems(itemData);
+            setSales(saleData);
+        } catch (err) {
+            setError(err.message || "Failed to load sales data.");
+        } finally {
+            setLoading(false);
         }
-    });
+    }
 
-    // Save sales records after they change.
     useEffect(() => {
-        localStorage.setItem("easycount-sales", JSON.stringify(sales));
-    }, [sales]);
+        loadData();
+    }, []);
 
-    // Find the currently selected product.
-    const selectedProduct = stock.find(
-        (item) => item.productName === productName
+    const selectedProduct = items.find(
+        (item) => item.id === Number(itemId)
     );
 
-    function handleSale(e) {
+    const availableQuantity = selectedProduct
+        ? Number(selectedProduct.stockQty)
+        : 0;
+
+    const total = Number(quantity || 0) * Number(price || 0);
+    const borrowed = total - Number(paid || 0);
+
+    function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    }
+
+    async function handleSale(e) {
         e.preventDefault();
+
+        if (!customerId || !itemId || quantity === "" || price === "") {
+            alert("Please fill out all required fields.");
+            return;
+        }
 
         const saleQuantity = Number(quantity);
         const salePrice = Number(price);
-        const salePaid = Number(paid);
-        const saleBorrowed = Number(borrow);
-        const customerName = customer.trim();
-
-        if (!customerName || !productName || quantity === "" || price === "") {
-            alert("Please fill out all fields.");
-            return;
-        }
+        const salePaid = Number(paid || 0);
 
         if (!Number.isInteger(saleQuantity) || saleQuantity <= 0) {
             alert("Quantity must be a positive whole number.");
@@ -55,46 +87,84 @@ export default function Sales({sales, setSales}) {
             return;
         }
 
+        if (!Number.isFinite(salePaid) || salePaid < 0) {
+            alert("Please enter a valid paid amount.");
+            return;
+        }
+
         if (!selectedProduct) {
-            alert("Please select a product.");
+            alert("Please select a valid item.");
             return;
         }
 
-        if (saleQuantity > selectedProduct.quantity) {
-            alert(`Only ${selectedProduct.quantity} units are available.`);
+        if (saleQuantity > availableQuantity) {
+            alert(`Only ${availableQuantity} units are available.`);
             return;
         }
 
-        // Reduce stock first. Record the sale only if stock was updated.
-        const result = removeStock(productName, saleQuantity);
+        const saleTotal = saleQuantity * salePrice;
 
-        if (!result.success) {
-            alert(result.message);
+        if (salePaid > saleTotal) {
+            alert("Paid amount cannot be greater than the total.");
             return;
         }
 
-        const newSale = {
-            id: Date.now(),
-            customer: customerName,
-            productName,
-            quantity: saleQuantity,
-            price: salePrice,
-            paid: paid,
-            borrow:(saleQuantity * salePrice) - salePaid,
-            total: saleQuantity * salePrice,
-            date: new Date().toLocaleDateString(),
+        const saleRequest = {
+            ledgerId: Number(customerId),
+            invoiceDate: getTodayDate(),
+            paid: salePaid,
+            notes: null,
+            items: [
+                {
+                    itemId: Number(itemId),
+                    batchNo: null,
+                    qty: saleQuantity,
+                    price: salePrice,
+                },
+            ],
         };
 
-        setSales((currentSales) => [newSale, ...currentSales]);
+        try {
+            setSaving(true);
+            setError("");
 
-        alert("Sale completed. Stock has been reduced.");
+            await createSale(saleRequest);
+            await loadData();
 
-        setCustomer("");
-        setProductName("");
-        setQuantity("");
-        setPrice("");
-        setPaid("");
-        setBorrow("");
+            setCustomerId("");
+            setItemId("");
+            setQuantity("");
+            setPrice("");
+            setPaid("");
+
+            alert("Sale saved successfully!");
+        } catch (err) {
+            alert(err.message || "Failed to save sale.");
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    function formatMoney(value) {
+        return Number(value || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    }
+
+    function getSaleItems(sale) {
+        return sale.items || sale.lines || [];
+    }
+
+    if (loading) {
+        return (
+            <section className="p-6">
+                <h1 className="text-3xl font-bold">Sales</h1>
+                <p className="mt-4 text-gray-500">
+                    Loading customers, items and sales...
+                </p>
+            </section>
+        );
     }
 
     return (
@@ -102,46 +172,69 @@ export default function Sales({sales, setSales}) {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-3xl font-bold">Sales</h1>
-                   
                     <p className="text-gray-500">
-                        Record sales and update medicine stock.
+                        Record sales and update item stock.
                     </p>
                 </div>
 
-                <Link
-                    to="/"
-                    className="bg-black text-white px-5 py-2 rounded-md"
-                >
+                <Link to="/" className="bg-black text-white px-5 py-2 rounded-md">
                     &lt;&lt; Back
                 </Link>
             </div>
 
-            <form
-                onSubmit={handleSale}
-                className="flex flex-wrap gap-4 mb-8"
-            >
-                <input
-                    type="text"
-                    placeholder="Customer name"
-                    value={customer}
-                    onChange={(e) => setCustomer(e.target.value)}
+            {error && (
+                <div className="bg-red-100 text-red-700 p-3 rounded-md mb-5">
+                    {error}
+                    <button
+                        type="button"
+                        onClick={loadData}
+                        className="ml-3 underline font-semibold"
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
+
+            <form onSubmit={handleSale} className="flex flex-wrap gap-4 mb-8">
+                <select
+                    value={customerId}
+                    onChange={(e) => setCustomerId(e.target.value)}
                     className="border p-3 rounded-md"
-                />
+                    required
+                >
+                    <option value="">Select customer</option>
+                    {ledgers.map((ledger) => (
+                        <option key={ledger.id} value={ledger.id}>
+                            {ledger.name}
+                        </option>
+                    ))}
+                </select>
 
                 <select
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    className="border p-3 rounded-md"
-                >
-                    <option value="">Select medicine</option>
+                    value={itemId}
+                    onChange={(e) => {
+                        const selectedId = e.target.value;
+                        setItemId(selectedId);
 
-                    {stock.map((item) => (
+                        const product = items.find(
+                            (item) => item.id === Number(selectedId)
+                        );
+
+                        setPrice(
+                            product ? String(product.salePrice ?? "") : ""
+                        );
+                    }}
+                    className="border p-3 rounded-md"
+                    required
+                >
+                    <option value="">Select item</option>
+                    {items.map((item) => (
                         <option
                             key={item.id}
-                            value={item.productName}
-                            disabled={item.quantity <= 0}
+                            value={item.id}
+                            disabled={Number(item.stockQty) <= 0}
                         >
-                            {item.productName} — Stock: {item.quantity}
+                            {item.name} — Stock: {item.stockQty}
                         </option>
                     ))}
                 </select>
@@ -154,48 +247,45 @@ export default function Sales({sales, setSales}) {
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     className="border p-3 rounded-md"
+                    required
                 />
 
                 <input
                     type="number"
                     min="0"
-                    step="any"
+                    step="0.01"
                     placeholder="Sale price per unit"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     className="border p-3 rounded-md"
+                    required
                 />
+
                 <input
                     type="number"
                     min="0"
-                    step="any"
-                    placeholder="paid"
+                    step="0.01"
+                    placeholder="Paid"
                     value={paid}
                     onChange={(e) => setPaid(e.target.value)}
                     className="border p-3 rounded-md"
                 />
-                {/* <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="Borrowed"
-                    value={borrow}
-                    onChange={(e) => setBorrow(e.target.value)}
-                    className="border p-3 rounded-md"
-                /> */}
 
                 <button
                     type="submit"
-                    className="bg-black text-white px-6 py-3 rounded-md"
+                    disabled={saving}
+                    className="bg-black text-white px-6 py-3 rounded-md disabled:opacity-50"
                 >
-                    Complete Sale
+                    {saving ? "Saving..." : "Complete Sale"}
                 </button>
             </form>
 
             {selectedProduct && (
-                <p className="mb-4 text-emerald-700">
-                    Available quantity: {selectedProduct.quantity}
-                </p>
+                <div className="mb-4 text-emerald-700">
+                    <p>Available quantity: {availableQuantity}</p>
+                    <p>Total: {formatMoney(total)} AF</p>
+                    <p>Borrowed: {formatMoney(borrowed)} AF</p>
+                </div>
             )}
 
             <div className="overflow-x-auto">
@@ -205,7 +295,7 @@ export default function Sales({sales, setSales}) {
                             <th className="p-3">#</th>
                             <th className="p-3">Date</th>
                             <th className="p-3">Customer</th>
-                            <th className="p-3">Product</th>
+                            <th className="p-3">Item</th>
                             <th className="p-3">Quantity</th>
                             <th className="p-3">Unit Price</th>
                             <th className="p-3">Paid</th>
@@ -215,31 +305,39 @@ export default function Sales({sales, setSales}) {
                     </thead>
 
                     <tbody>
-                        {
-                        sales.length === 0 ? (
+                        {sales.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="p-6 text-gray-500">
+                                <td colSpan="9" className="p-6 text-gray-500">
                                     No sales recorded yet.
                                 </td>
                             </tr>
                         ) : (
-                            sales.map((sale, index) => (
-                                <tr key={sale.id} className="border-b">
-                                    <td className="p-3">{index + 1}</td>
-                                    <td className="p-3">{sale.date}</td>
-                                    <td className="p-3">{sale.customer}</td>
-                                    <td className="p-3">{sale.productName}</td>
-                                    <td className="p-3">{sale.quantity}</td>
-                                    <td className="p-3">
-                                        {sale.price.toLocaleString()} AF
-                                    </td>
-                                    <td className="p-3">{sale.paid}</td>
-                                    <td className="p-3">{sale.borrow}</td>
-                                    <td className="p-3">
-                                        {sale.total.toLocaleString()} AF
-                                    </td>
-                                </tr>
-                            ))
+                            sales.flatMap((sale, saleIndex) =>
+                                getSaleItems(sale).map((line, lineIndex) => (
+                                    <tr
+                                        key={`${sale.id}-${lineIndex}`}
+                                        className="border-b"
+                                    >
+                                        <td className="p-3">{saleIndex + 1}</td>
+                                        <td className="p-3">{sale.invoiceDate}</td>
+                                        <td className="p-3">{sale.ledgerName}</td>
+                                        <td className="p-3">{line.itemName}</td>
+                                        <td className="p-3">{line.qty}</td>
+                                        <td className="p-3">
+                                            {formatMoney(line.price)} AF
+                                        </td>
+                                        <td className="p-3">
+                                            {formatMoney(sale.paid)} AF
+                                        </td>
+                                        <td className="p-3">
+                                            {formatMoney(sale.borrow)} AF
+                                        </td>
+                                        <td className="p-3">
+                                            {formatMoney(sale.total)} AF
+                                        </td>
+                                    </tr>
+                                ))
+                            )
                         )}
                     </tbody>
                 </table>

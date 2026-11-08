@@ -26,21 +26,24 @@ public class SaleItem {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @Column(name = "batch_no", length = 50)
+    @Column(name = "batch_no")
     private String batchNo;
 
-    @Column(name = "qty", precision = 14, scale = 3, nullable = false)
+    @Column(name = "qty", nullable = false)
     private BigDecimal qty;
 
-    @Column(name = "price", precision = 14, scale = 2, nullable = false)
+    @Column(name = "price", nullable = false)
     private BigDecimal price;
 
-    @Column(
-        name = "line_total",
-        precision = 14,
-        scale = 2,
-        insertable = false,
-        updatable = false
-    )
+    // GENERATED ALWAYS AS (...) STORED in PostgreSQL: Hibernate must not write it.
+    @Column(name = "line_total", insertable = false, updatable = false)
     private BigDecimal lineTotal;
+
+    public SaleItem(Sale sale, Item item, String batchNo, BigDecimal qty, BigDecimal price) {
+        this.sale = sale;
+        this.item = item;
+        this.batchNo = batchNo;
+        this.qty = qty;
+        this.price = price;
+    }
 }

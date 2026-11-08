@@ -26,15 +26,13 @@ public class ItemService {
     }
 
     public Item findById(Long id) {
-        return repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Item not found"));
+        return repo.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
     }
 
     public Item create(ItemRequest r) {
         if (repo.existsByNameIgnoreCase(r.name().trim())) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Item already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Item already exists");
         }
         Item item = new Item();
         apply(item, r);
@@ -43,28 +41,24 @@ public class ItemService {
 
     public Item update(Long id, ItemRequest r) {
         Item item = findById(id);
-
         if (repo.existsByNameIgnoreCaseAndIdNot(r.name().trim(), id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Another item has this name");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Item already exists");
         }
-
         apply(item, r);
         return repo.save(item);
     }
 
     public void delete(Long id) {
         if (!repo.existsById(id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Item not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found");
         }
-
         repo.deleteById(id);
     }
 
     private void apply(Item item, ItemRequest r) {
         item.setName(r.name().trim());
         item.setUnit(r.unit().trim());
+        item.setCompany(r.company() == null ? null : r.company().trim());
         item.setPurchasePrice(r.purchasePrice());
         item.setSalePrice(r.salePrice());
     }

@@ -9,6 +9,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 public record ItemRequest(
     @NotBlank String name,
     @NotBlank String unit,
+    String company,
     @NotNull @PositiveOrZero BigDecimal purchasePrice,
     @NotNull @PositiveOrZero BigDecimal salePrice
 ) {}

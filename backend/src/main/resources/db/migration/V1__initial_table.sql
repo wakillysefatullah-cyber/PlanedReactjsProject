@@ -36,7 +36,6 @@ CREATE TABLE IF NOT EXISTS sale_items (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     sale_id BIGINT NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
     item_id BIGINT NOT NULL REFERENCES items(id),
-    batch_no VARCHAR(50),
     qty NUMERIC(14,3) NOT NULL,
     price NUMERIC(14,2) NOT NULL,
     line_total NUMERIC(14,2)
@@ -61,7 +60,6 @@ CREATE TABLE IF NOT EXISTS purchase_items (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     purchase_id BIGINT NOT NULL REFERENCES purchases(id) ON DELETE CASCADE,
     item_id BIGINT NOT NULL REFERENCES items(id),
-    batch_no VARCHAR(50),
     qty NUMERIC(14,3) NOT NULL,
     price NUMERIC(14,2) NOT NULL,
     line_total NUMERIC(14,2)

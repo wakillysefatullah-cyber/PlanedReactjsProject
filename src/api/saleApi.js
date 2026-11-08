@@ -1,7 +1,5 @@
-
 const API_URL = "http://localhost:8080/api/sales";
 
-// Extract useful error messages from the backend
 async function handleResponse(response, defaultMessage) {
     if (!response.ok) {
         let message = defaultMessage;
@@ -10,7 +8,7 @@ async function handleResponse(response, defaultMessage) {
             const error = await response.json();
             message = error.detail || error.message || error.title || message;
         } catch {
-            // Response did not contain JSON
+            // Response was not JSON.
         }
 
         throw new Error(message);
@@ -23,7 +21,6 @@ async function handleResponse(response, defaultMessage) {
     return response.json();
 }
 
-// Get all sales, optionally filtered by ledger ID
 export async function getSales(ledgerId = null) {
     const url = new URL(API_URL);
 
@@ -36,14 +33,12 @@ export async function getSales(ledgerId = null) {
     return handleResponse(response, "Failed to load sales");
 }
 
-// Get one sale by ID
 export async function getSaleById(id) {
     const response = await fetch(`${API_URL}/${id}`);
 
     return handleResponse(response, "Failed to load sale");
 }
 
-// Create a new sale
 export async function createSale(sale) {
     const response = await fetch(API_URL, {
         method: "POST",
@@ -56,7 +51,6 @@ export async function createSale(sale) {
     return handleResponse(response, "Failed to create sale");
 }
 
-// Delete an existing sale
 export async function deleteSale(id) {
     const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",

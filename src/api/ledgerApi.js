@@ -1,7 +1,6 @@
 
 const API_URL = "http://localhost:8080/api/ledgers";
 
-// Get all ledgers from Spring Boot
 export async function getLedgers(search = "") {
     const url = new URL(API_URL);
 

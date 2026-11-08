@@ -1,4 +1,3 @@
-
 package com.easycount.entity;
 
 import java.math.BigDecimal;
@@ -30,8 +29,11 @@ public class Sale {
     @Column(name = "invoice_date", nullable = false)
     private LocalDate invoiceDate;
 
-    @Column(name = "total", precision = 14, scale = 2, nullable = false)
+    @Column(name = "total", nullable = false)
     private BigDecimal total = BigDecimal.ZERO;
+
+    @Column(name = "paid", nullable = false)
+    private BigDecimal paid = BigDecimal.ZERO;
 
     @Column(name = "notes")
     private String notes;
@@ -39,16 +41,12 @@ public class Sale {
     @Column(name = "created_at", insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-    @OneToMany(
-        mappedBy = "sale",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SaleItem> items = new ArrayList<>();
 
-    public void addItem(SaleItem item) {
-    items.add(item);
-    item.setSale(this);
-}
-
+    // Not stored: always derived, so it can never go out of sync.
+    @Transient
+    public BigDecimal getBorrow() {
+        return total.subtract(paid);
+    }
 }
