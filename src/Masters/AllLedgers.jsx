@@ -248,24 +248,24 @@ export default function AllLedgers() {
             ) : (
 
                 <div className="overflow-x-auto mx-4">
-                    <table className="w-full border-collapse border border-gray-400">
+                    <table className="w-full ">
 
                         <thead className="bg-gray-200">
                             <tr>
-                                <th className="border p-3">Ledger ID</th>
-                                <th className="border p-3">Customer Name</th>
-                                <th className="border p-3">Phone</th>
-                                <th className="border p-3">Area</th>
-                                <th className="border p-3">Address</th>
-                                <th className="border p-3">Created At</th>
-                                <th className="border p-3">Actions</th>
+                                <th className="p-3">Ledger ID</th>
+                                <th className="p-3">Customer Name</th>
+                                <th className="p-3">Phone</th>
+                                <th className="p-3">Area</th>
+                                <th className="p-3">Address</th>
+                                <th className="p-3">Created At</th>
+                                <th className="p-3">Actions</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {ledgers.length > 0 ? (
                                 ledgers.map((item, index) => (
-                                    <tr
+                                    <tr 
                                         key={item.id}
                                         onClick={() =>
                                             navigate(`/Ledger/${item.id}`, {
@@ -275,33 +275,33 @@ export default function AllLedgers() {
                                         className="hover:bg-gray-100 cursor-pointer text-center"
                                     >
 
-                                        <td className="border p-3">
+                                        <td className="border-b p-3">
                                             {item.id}
                                         </td>
 
-                                        <td className="border p-3">
+                                        <td className="border-b p-3">
                                             {item.name}
                                         </td>
 
-                                        <td className="border p-3">
+                                        <td className="border-b p-3">
                                             {item.phone}
                                         </td>
 
-                                        <td className="border p-3">
+                                        <td className="border-b p-3">
                                             {item.area}
                                         </td>
 
-                                        <td className="border p-3">
+                                        <td className="border-b p-3">
                                             {item.address}
                                         </td>
 
-                                        <td className="border p-3">
+                                        <td className="border-b p-3">
                                             {item.createdAt
                                                 ? new Date(item.createdAt).toLocaleString()
                                                 : "—"}
                                         </td>
 
-                                        <td className="border p-3">
+                                        <td className="border-b p-3">
                                             <div className="flex justify-center gap-2">
 
                                                 <button
@@ -334,7 +334,7 @@ export default function AllLedgers() {
                                 <tr>
                                     <td
                                         colSpan="8"
-                                        className="border p-5 text-center text-gray-500"
+                                        className="border-b p-5 text-center text-gray-500"
                                     >
                                         No ledgers found.
                                     </td>

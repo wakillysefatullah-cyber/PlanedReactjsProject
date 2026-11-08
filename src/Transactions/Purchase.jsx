@@ -347,59 +347,100 @@ export default function Purchase() {
                         </tr>
                     </thead>
 
-                    <tbody>
-                        {purchases.length === 0 ? (
-                            <tr>
-                                <td colSpan="10" className="p-6 text-gray-500">
-                                    No purchases recorded yet.
-                                </td>
-                            </tr>
-                        ) : (
-                            purchases.flatMap((purchase, purchaseIndex) =>
-                                getPurchaseLines(purchase).map((line, lineIndex) => (
-                                    <tr
-                                        key={`${purchase.id}-${lineIndex}`}
-                                        className="border-b"
-                                    >
-                                        <td className="p-3">{purchaseIndex + 1}</td>
-                                        <td className="p-3">{purchase.invoiceDate}</td>
-                                        <td className="p-3">{purchase.ledgerName}</td>
-                                        <td className="p-3">{line.itemName}</td>
-                                        <td className="p-3">{line.qty}</td>
-                                        <td className="p-3">{formatMoney(line.price)} AF</td>
-                                        <td className="p-3 text-green-600">
-                                            {formatMoney(purchase.paid)} AF
-                                        </td>
-                                        <td className="p-3 text-red-600">
-                                            {formatMoney(
-                                                purchase.borrow ??
-                                                (Number(purchase.total) - Number(purchase.paid))
-                                            )} AF
-                                        </td>
-                                        <td className="p-3 font-semibold">
-                                            {formatMoney(purchase.total)} AF
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleEdit(purchase)}
-                                                className="bg-black text-white px-3 py-1 rounded mr-2"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDelete(purchase.id)}
-                                                className="bg-red-600 text-white px-3 py-1 rounded"
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )
-                        )}
-                    </tbody>
+                <tbody>
+                    {purchases.length === 0 ? (
+                        <tr>
+                            <td colSpan="10" className="p-6 text-gray-500">
+                                No purchases recorded yet.
+                            </td>
+                        </tr>
+                    ) : (
+                        purchases.map((purchase, purchaseIndex) => {
+                            const lines = getPurchaseLines(purchase);
+
+                            return (
+                                <tr key={purchase.id} className="border-b">
+                                    <td className="p-3">{purchaseIndex + 1}</td>
+
+                                    <td className="p-3">
+                                        {purchase.invoiceDate || "—"}
+                                    </td>
+
+                                    <td className="p-3">
+                                        {purchase.ledgerName ||
+                                            purchase.supplierName ||
+                                            purchase.ledger?.name ||
+                                            "—"}
+                                    </td>
+
+                                    <td className="p-3">
+                                        {lines.length > 0 ? (
+                                            <div className="space-y-1">
+                                                {lines.map((line, index) => (
+                                                    <div key={index}>
+                                                        {line.itemName || line.name || "—"}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : "—"}
+                                    </td>
+
+                                    <td className="p-3">
+                                        <div className="space-y-1">
+                                            {lines.map((line, index) => (
+                                                <div key={index}>{line.qty}</div>
+                                            ))}
+                                        </div>
+                                    </td>
+
+                                    <td className="p-3">
+                                        <div className="space-y-1">
+                                            {lines.map((line, index) => (
+                                                <div key={index}>
+                                                    {formatMoney(line.price)} AF
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </td>
+
+                                    <td className="p-3 text-green-600">
+                                        {formatMoney(purchase.paid)} AF
+                                    </td>
+
+                                    <td className="p-3 text-red-600">
+                                        {formatMoney(
+                                            purchase.borrow ??
+                                            (Number(purchase.total || 0) -
+                                                Number(purchase.paid || 0))
+                                        )} AF
+                                    </td>
+
+                                    <td className="p-3 font-semibold">
+                                        {formatMoney(purchase.total)} AF
+                                    </td>
+
+                                    <td className="p-3 whitespace-nowrap">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleEdit(purchase)}
+                                            className="bg-black text-white px-3 py-1 rounded mr-2"
+                                        >
+                                            Edit
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(purchase.id)}
+                                            className="bg-red-600 text-white px-3 py-1 rounded"
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })
+                    )}
+                </tbody>
                 </table>
             </div>
 

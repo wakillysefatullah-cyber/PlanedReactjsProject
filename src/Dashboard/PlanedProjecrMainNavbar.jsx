@@ -14,7 +14,7 @@ export default function PlanedProjecrMainNavbar(){
                     placeholder="Search..." />
                 </div>
                 <div className="flex gap-3 ">
-                    <img src="public/r.jpg" className="size-12 rounded-full" alt="" />
+                    <img src="public/sefatullah.jpg" className="size-12 rounded-full" alt="" />
                     <div>
                         <select className="font-bold font-serif items-center">
                             <option value="set">Sefatullah</option>

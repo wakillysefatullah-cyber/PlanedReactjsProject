@@ -10,7 +10,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/ledgers")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5179"})
 public class LedgerController {
 
     private final LedgerService service;
