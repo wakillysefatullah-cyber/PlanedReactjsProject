@@ -1,4 +1,3 @@
-
 package com.easycount.service;
 
 import java.util.List;
@@ -42,9 +41,17 @@ public class LedgerService {
     }
 
     public void delete(Long id) {
+
         if (!repo.existsById(id)) {
             throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Ledger not found");
+                    HttpStatus.NOT_FOUND,
+                    "Ledger not found");
+        }
+
+        if (repo.hasTransactionsForLedger(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Cannot delete this ledger because it has existing sales, purchases, receipts, or payments.");
         }
 
         repo.deleteById(id);
