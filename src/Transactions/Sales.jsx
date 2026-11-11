@@ -4,7 +4,12 @@ import { Link } from "react-router-dom";
 
 import { getLedgers } from "../api/ledgerApi";
 import { itemApi } from "../api/itemApi";
-import { createSale, getSales } from "../api/saleApi";
+import {
+    createSale,
+    updateSale,
+    deleteSale,
+    getSales
+} from "../api/saleApi";
 
 export default function Sales() {
     const [ledgers, setLedgers] = useState([]);
@@ -16,10 +21,25 @@ export default function Sales() {
     const [quantity, setQuantity] = useState("");
     const [price, setPrice] = useState("");
     const [paid, setPaid] = useState("");
+    const [invoiceDate, setInvoiceDate] = useState(getTodayDate());
+
+    const [editingSaleId, setEditingSaleId] = useState(null);
+    const [originalItemId, setOriginalItemId] = useState(null);
+    const [originalQuantity, setOriginalQuantity] = useState(0);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
     const [error, setError] = useState("");
+
+    function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    }
 
     async function loadData() {
         try {
@@ -49,26 +69,108 @@ export default function Sales() {
         (item) => item.id === Number(itemId)
     );
 
+    // During editing, include the original quantity because it
+    // will be restored to stock by the backend before updating.
     const availableQuantity = selectedProduct
-        ? Number(selectedProduct.stockQty)
+        ? Number(selectedProduct.stockQty) +
+          (
+              editingSaleId &&
+              Number(itemId) === Number(originalItemId)
+                  ? Number(originalQuantity)
+                  : 0
+          )
         : 0;
 
     const total = Number(quantity || 0) * Number(price || 0);
     const borrowed = total - Number(paid || 0);
 
-    function getTodayDate() {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, "0");
-        const day = String(today.getDate()).padStart(2, "0");
+    function formatMoney(value) {
+        return Number(value || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    }
 
-        return `${year}-${month}-${day}`;
+    function getSaleItems(sale) {
+        return sale.items || sale.lines || [];
+    }
+
+    function resetForm() {
+        setCustomerId("");
+        setItemId("");
+        setQuantity("");
+        setPrice("");
+        setPaid("");
+        setInvoiceDate(getTodayDate());
+
+        setEditingSaleId(null);
+        setOriginalItemId(null);
+        setOriginalQuantity(0);
+    }
+
+    function handleEdit(sale) {
+        const saleItems = getSaleItems(sale);
+
+        if (saleItems.length !== 1) {
+            alert(
+                "This sale contains multiple items. Editing it through the current single-item form is not supported yet."
+            );
+            return;
+        }
+
+        const line = saleItems[0];
+
+        setEditingSaleId(sale.id);
+        setOriginalItemId(line.itemId);
+        setOriginalQuantity(Number(line.qty));
+
+        setCustomerId(String(sale.ledgerId));
+        setItemId(String(line.itemId));
+        setQuantity(String(line.qty));
+        setPrice(String(line.price));
+        setPaid(String(sale.paid ?? 0));
+        setInvoiceDate(sale.invoiceDate || getTodayDate());
+
+        setError("");
+    }
+
+    async function handleDelete(sale) {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete sale #${sale.id}?`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setDeletingId(sale.id);
+            setError("");
+
+            await deleteSale(sale.id);
+
+            if (editingSaleId === sale.id) {
+                resetForm();
+            }
+
+            await loadData();
+
+            alert("Sale deleted successfully!");
+        } catch (err) {
+            alert(err.message || "Failed to delete sale.");
+        } finally {
+            setDeletingId(null);
+        }
     }
 
     async function handleSale(e) {
         e.preventDefault();
 
-        if (!customerId || !itemId || quantity === "" || price === "") {
+        if (
+            !customerId ||
+            !itemId ||
+            quantity === "" ||
+            price === "" ||
+            !invoiceDate
+        ) {
             alert("Please fill out all required fields.");
             return;
         }
@@ -111,7 +213,7 @@ export default function Sales() {
 
         const saleRequest = {
             ledgerId: Number(customerId),
-            invoiceDate: getTodayDate(),
+            invoiceDate,
             paid: salePaid,
             notes: null,
             items: [
@@ -128,32 +230,22 @@ export default function Sales() {
             setSaving(true);
             setError("");
 
-            await createSale(saleRequest);
+            if (editingSaleId !== null) {
+                await updateSale(editingSaleId, saleRequest);
+                alert("Sale updated successfully!");
+            } else {
+                await createSale(saleRequest);
+                alert("Sale saved successfully!");
+            }
+
+            resetForm();
             await loadData();
 
-            setCustomerId("");
-            setItemId("");
-            setQuantity("");
-            setPrice("");
-            setPaid("");
-
-            alert("Sale saved successfully!");
         } catch (err) {
             alert(err.message || "Failed to save sale.");
         } finally {
             setSaving(false);
         }
-    }
-
-    function formatMoney(value) {
-        return Number(value || 0).toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
-    }
-
-    function getSaleItems(sale) {
-        return sale.items || sale.lines || [];
     }
 
     if (loading) {
@@ -177,7 +269,10 @@ export default function Sales() {
                     </p>
                 </div>
 
-                <Link to="/" className="bg-black text-white px-5 py-2 rounded-md">
+                <Link
+                    to="/"
+                    className="bg-black text-white px-5 py-2 rounded-md"
+                >
                     &lt;&lt; Back
                 </Link>
             </div>
@@ -232,12 +327,26 @@ export default function Sales() {
                         <option
                             key={item.id}
                             value={item.id}
-                            disabled={Number(item.stockQty) <= 0}
+                            disabled={
+                                Number(item.stockQty) <= 0 &&
+                                !(
+                                    editingSaleId &&
+                                    Number(item.id) === Number(originalItemId)
+                                )
+                            }
                         >
                             {item.name} — Stock: {item.stockQty}
                         </option>
                     ))}
                 </select>
+
+                <input
+                    type="date"
+                    value={invoiceDate}
+                    onChange={(e) => setInvoiceDate(e.target.value)}
+                    className="border p-3 rounded-md"
+                    required
+                />
 
                 <input
                     type="number"
@@ -276,8 +385,23 @@ export default function Sales() {
                     disabled={saving}
                     className="bg-black text-white px-6 py-3 rounded-md disabled:opacity-50"
                 >
-                    {saving ? "Saving..." : "Complete Sale"}
+                    {saving
+                        ? "Saving..."
+                        : editingSaleId !== null
+                            ? "Update Sale"
+                            : "Complete Sale"}
                 </button>
+
+                {editingSaleId !== null && (
+                    <button
+                        type="button"
+                        onClick={resetForm}
+                        disabled={saving}
+                        className="bg-gray-500 text-white px-6 py-3 rounded-md"
+                    >
+                        Cancel Edit
+                    </button>
+                )}
             </form>
 
             {selectedProduct && (
@@ -301,43 +425,111 @@ export default function Sales() {
                             <th className="p-3">Paid</th>
                             <th className="p-3">Borrowed</th>
                             <th className="p-3">Total</th>
+                            <th className="p-3">Actions</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         {sales.length === 0 ? (
                             <tr>
-                                <td colSpan="9" className="p-6 text-gray-500">
+                                <td colSpan="10" className="p-6 text-gray-500">
                                     No sales recorded yet.
                                 </td>
                             </tr>
                         ) : (
-                            sales.flatMap((sale, saleIndex) =>
-                                getSaleItems(sale).map((line, lineIndex) => (
+                            sales.flatMap((sale, saleIndex) => {
+                                const saleItems = getSaleItems(sale);
+
+                                return saleItems.map((line, lineIndex) => (
                                     <tr
                                         key={`${sale.id}-${lineIndex}`}
                                         className="border-b"
                                     >
-                                        <td className="p-3">{saleIndex + 1}</td>
-                                        <td className="p-3">{sale.invoiceDate}</td>
-                                        <td className="p-3">{sale.ledgerName}</td>
+                                        {lineIndex === 0 && (
+                                            <>
+                                                <td
+                                                    className="p-3"
+                                                    rowSpan={saleItems.length}
+                                                >
+                                                    {saleIndex + 1}
+                                                </td>
+
+                                                <td
+                                                    className="p-3"
+                                                    rowSpan={saleItems.length}
+                                                >
+                                                    {sale.invoiceDate}
+                                                </td>
+
+                                                <td
+                                                    className="p-3"
+                                                    rowSpan={saleItems.length}
+                                                >
+                                                    {sale.ledgerName}
+                                                </td>
+                                            </>
+                                        )}
+
                                         <td className="p-3">{line.itemName}</td>
                                         <td className="p-3">{line.qty}</td>
+
                                         <td className="p-3">
                                             {formatMoney(line.price)} AF
                                         </td>
-                                        <td className="p-3">
-                                            {formatMoney(sale.paid)} AF
-                                        </td>
-                                        <td className="p-3">
-                                            {formatMoney(sale.borrow)} AF
-                                        </td>
-                                        <td className="p-3">
-                                            {formatMoney(sale.total)} AF
-                                        </td>
+
+                                        {lineIndex === 0 && (
+                                            <>
+                                                <td
+                                                    className="p-3"
+                                                    rowSpan={saleItems.length}
+                                                >
+                                                    {formatMoney(sale.paid)} AF
+                                                </td>
+
+                                                <td
+                                                    className="p-3"
+                                                    rowSpan={saleItems.length}
+                                                >
+                                                    {formatMoney(sale.borrow)} AF
+                                                </td>
+
+                                                <td
+                                                    className="p-3"
+                                                    rowSpan={saleItems.length}
+                                                >
+                                                    {formatMoney(sale.total)} AF
+                                                </td>
+
+                                                <td
+                                                    className="p-3"
+                                                    rowSpan={saleItems.length}
+                                                >
+                                                    <div className="flex justify-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEdit(sale)}
+                                                            className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700"
+                                                        >
+                                                            Edit
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDelete(sale)}
+                                                            disabled={deletingId === sale.id}
+                                                            className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 disabled:opacity-50"
+                                                        >
+                                                            {deletingId === sale.id
+                                                                ? "Deleting..."
+                                                                : "Delete"}
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </>
+                                        )}
                                     </tr>
-                                ))
-                            )
+                                ));
+                            })
                         )}
                     </tbody>
                 </table>

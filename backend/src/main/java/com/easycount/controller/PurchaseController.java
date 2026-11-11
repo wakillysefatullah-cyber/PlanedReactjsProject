@@ -1,3 +1,4 @@
+
 package com.easycount.controller;
 
 import java.util.List;
@@ -23,24 +24,38 @@ public class PurchaseController {
     }
 
     @GetMapping
-    public List<PurchaseResponse> all(@RequestParam(required = false) Long ledgerId) {
+    public List<PurchaseResponse> all(
+            @RequestParam(required = false) Long ledgerId) {
+
         return service.findAll(ledgerId);
     }
 
     @GetMapping("/{id}")
     public PurchaseResponse one(@PathVariable Long id) {
+
         return service.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PurchaseResponse create(@Valid @RequestBody PurchaseRequest request) {
+    public PurchaseResponse create(
+            @Valid @RequestBody PurchaseRequest request) {
+
         return service.create(request);
+    }
+
+    @PutMapping("/{id}")
+    public PurchaseResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody PurchaseRequest request) {
+
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
+
         service.delete(id);
     }
 }

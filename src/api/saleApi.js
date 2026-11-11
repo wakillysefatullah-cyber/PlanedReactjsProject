@@ -1,3 +1,4 @@
+
 const API_URL = "http://localhost:8080/api/sales";
 
 async function handleResponse(response, defaultMessage) {
@@ -6,9 +7,14 @@ async function handleResponse(response, defaultMessage) {
 
         try {
             const error = await response.json();
-            message = error.detail || error.message || error.title || message;
+
+            message =
+                error.detail ||
+                error.message ||
+                error.title ||
+                message;
         } catch {
-            // Response was not JSON.
+            // Response did not contain JSON.
         }
 
         throw new Error(message);
@@ -49,6 +55,19 @@ export async function createSale(sale) {
     });
 
     return handleResponse(response, "Failed to create sale");
+}
+
+
+export async function updateSale(id, sale) {
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sale),
+    });
+
+    return handleResponse(response, "Failed to update sale");
 }
 
 export async function deleteSale(id) {

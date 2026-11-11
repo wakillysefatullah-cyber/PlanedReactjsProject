@@ -1,14 +1,14 @@
 
 package com.easycount.service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.http.HttpStatus;
@@ -51,6 +51,7 @@ public class SalesReturnService {
         this.itemRepo = itemRepo;
     }
 
+    // CREATE SALES RETURN
     @Transactional
     public SalesReturnResponse create(SalesReturnRequest request) {
 
@@ -100,16 +101,19 @@ public class SalesReturnService {
 
             BigDecimal returnQty = line.qty();
 
-            if (returnQty == null || returnQty.compareTo(BigDecimal.ZERO) <= 0) {
+            if (returnQty == null ||
+                    returnQty.compareTo(BigDecimal.ZERO) <= 0) {
+
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Return quantity must be greater than zero."
                 );
             }
 
-      
             BigDecimal previouslyReturned =
-                    salesReturnItemRepo.sumReturnedQtyBySaleItemId(saleItem.getId());
+                    salesReturnItemRepo.sumReturnedQtyBySaleItemId(
+                            saleItem.getId()
+                    );
 
             if (previouslyReturned == null) {
                 previouslyReturned = BigDecimal.ZERO;
@@ -127,7 +131,7 @@ public class SalesReturnService {
                 );
             }
 
-            // Restore the returned quantity to stock.
+            // Restore returned quantity to stock.
             int updatedRows = itemRepo.increaseStock(
                     saleItem.getItem().getId(),
                     returnQty
@@ -167,190 +171,202 @@ public class SalesReturnService {
         return toResponse(savedReturn);
     }
 
+    // UPDATE SALES RETURN
     @Transactional
-public SalesReturnResponse update(Long id, SalesReturnRequest request) {
+    public SalesReturnResponse update(Long id, SalesReturnRequest request) {
 
-    SalesReturn salesReturn = salesReturnRepo.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Sales return not found with ID: " + id
-            ));
-
-    // Keep the return connected to its original sale.
-    if (!salesReturn.getSale().getId().equals(request.saleId())) {
-        throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "A sales return cannot be moved to another sale."
-        );
-    }
-
-    // Remember the quantities from this return before replacing its lines.
-    Map<Long, BigDecimal> oldQuantities = new HashMap<>();
-
-    for (SalesReturnItem oldItem : salesReturn.getItems()) {
-        oldQuantities.merge(
-                oldItem.getSaleItem().getId(),
-                oldItem.getQty(),
-                BigDecimal::add
-        );
-
-        // Reverse the previous stock increase.
-        int updated = itemRepo.decreaseStock(
-                oldItem.getItem().getId(),
-                oldItem.getQty()
-        );
-
-        if (updated == 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Cannot edit this return because some returned stock "
-                            + "has already been sold or removed."
-            );
-        }
-    }
-
-    Set<Long> processedIds = new HashSet<>();
-    BigDecimal newTotal = BigDecimal.ZERO;
-
-    // Remove the old return lines. orphanRemoval deletes those old lines.
-    List<SalesReturnItem> newItems = new ArrayList<>();
-
-    for (SalesReturnRequest.Line line : request.items()) {
-
-        if (!processedIds.add(line.saleItemId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Duplicate sale item ID: " + line.saleItemId()
-            );
-        }
-
-        SaleItem saleItem = saleItemRepo
-                .findByIdForUpdate(line.saleItemId())
+        SalesReturn salesReturn = salesReturnRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Sale item not found: " + line.saleItemId()
+                        "Sales return not found with ID: " + id
                 ));
 
-        if (!saleItem.getSale().getId()
-                .equals(salesReturn.getSale().getId())) {
+        // A return must remain connected to its original sale.
+        if (!salesReturn.getSale().getId().equals(request.saleId())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Selected sale item does not belong to this sale."
+                    "A sales return cannot be moved to another sale."
             );
         }
 
-        BigDecimal qty = line.qty();
+        // Remember the old quantities before replacing the return lines.
+        Map<Long, BigDecimal> oldQuantities = new HashMap<>();
 
-        if (qty == null || qty.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Return quantity must be greater than zero."
+        for (SalesReturnItem oldItem : salesReturn.getItems()) {
+
+            oldQuantities.merge(
+                    oldItem.getSaleItem().getId(),
+                    oldItem.getQty(),
+                    BigDecimal::add
             );
-        }
 
-        BigDecimal alreadyReturned =
-                salesReturnItemRepo.sumReturnedQtyBySaleItemId(
-                        saleItem.getId()
+            // Reverse the previous stock increase.
+            int updated = itemRepo.decreaseStock(
+                    oldItem.getItem().getId(),
+                    oldItem.getQty()
+            );
+
+            if (updated == 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Cannot edit this return because some returned stock "
+                                + "has already been sold or removed."
                 );
-
-        if (alreadyReturned == null) {
-            alreadyReturned = BigDecimal.ZERO;
+            }
         }
 
-        // Exclude this return's previous quantity when calculating availability.
-        BigDecimal previousQtyForThisLine = oldQuantities.getOrDefault(
-                saleItem.getId(),
-                BigDecimal.ZERO
-        );
+        Set<Long> processedIds = new HashSet<>();
+        BigDecimal newTotal = BigDecimal.ZERO;
 
-        BigDecimal remaining = saleItem.getQty()
-                .subtract(alreadyReturned)
-                .add(previousQtyForThisLine);
+        // Prepare the replacement return items.
+        List<SalesReturnItem> newItems = new ArrayList<>();
 
-        if (qty.compareTo(remaining) > 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Return quantity exceeds the remaining quantity. "
-                            + "Available: " + remaining
+        for (SalesReturnRequest.Line line : request.items()) {
+
+            if (!processedIds.add(line.saleItemId())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Duplicate sale item ID: " + line.saleItemId()
+                );
+            }
+
+            SaleItem saleItem = saleItemRepo
+                    .findByIdForUpdate(line.saleItemId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Sale item not found: " + line.saleItemId()
+                    ));
+
+            if (!saleItem.getSale().getId()
+                    .equals(salesReturn.getSale().getId())) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Selected sale item does not belong to this sale."
+                );
+            }
+
+            BigDecimal qty = line.qty();
+
+            if (qty == null ||
+                    qty.compareTo(BigDecimal.ZERO) <= 0) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Return quantity must be greater than zero."
+                );
+            }
+
+            BigDecimal alreadyReturned =
+                    salesReturnItemRepo.sumReturnedQtyBySaleItemId(
+                            saleItem.getId()
+                    );
+
+            if (alreadyReturned == null) {
+                alreadyReturned = BigDecimal.ZERO;
+            }
+
+            // Exclude this return's old quantity when calculating availability.
+            BigDecimal previousQtyForThisLine = oldQuantities.getOrDefault(
+                    saleItem.getId(),
+                    BigDecimal.ZERO
+            );
+
+            BigDecimal remaining = saleItem.getQty()
+                    .subtract(alreadyReturned)
+                    .add(previousQtyForThisLine);
+
+            if (qty.compareTo(remaining) > 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Return quantity exceeds the remaining quantity. "
+                                + "Available: " + remaining
+                );
+            }
+
+            // Apply the new stock increase.
+            int updated = itemRepo.increaseStock(
+                    saleItem.getItem().getId(),
+                    qty
+            );
+
+            if (updated == 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Item not found: " + saleItem.getItem().getId()
+                );
+            }
+
+            BigDecimal originalPrice = saleItem.getPrice();
+
+            SalesReturnItem newItem = new SalesReturnItem(
+                    salesReturn,
+                    saleItem,
+                    qty,
+                    originalPrice
+            );
+
+            newItems.add(newItem);
+
+            newTotal = newTotal.add(
+                    qty.multiply(originalPrice)
+                            .setScale(2, RoundingMode.HALF_UP)
             );
         }
 
-        // Apply the new stock increase.
-        int updated = itemRepo.increaseStock(
-                saleItem.getItem().getId(),
-                qty
+        // IMPORTANT: Replace old return items with the new items.
+        // Do this once, after the loop.
+        salesReturn.getItems().clear();
+        salesReturn.getItems().addAll(newItems);
+
+        salesReturn.setReturnDate(
+                request.returnDate() != null
+                        ? request.returnDate()
+                        : LocalDate.now()
         );
 
-        if (updated == 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Item not found: " + saleItem.getItem().getId()
-            );
-        }
+        salesReturn.setNotes(request.notes());
 
-        BigDecimal originalPrice = saleItem.getPrice();
-
-        SalesReturnItem newItem = new SalesReturnItem(
-                salesReturn,
-                saleItem,
-                qty,
-                originalPrice
+        salesReturn.setTotal(
+                newTotal.setScale(2, RoundingMode.HALF_UP)
         );
 
-        newItems.add(newItem);
-
-        newTotal = newTotal.add(
-                qty.multiply(originalPrice)
-                        .setScale(2, RoundingMode.HALF_UP)
-        );
+        return toResponse(salesReturnRepo.save(salesReturn));
     }
 
-    salesReturn.setReturnDate(
-            request.returnDate() != null
-                    ? request.returnDate()
-                    : LocalDate.now()
-    );
+    // DELETE SALES RETURN
+    @Transactional
+    public void delete(Long id) {
 
-    salesReturn.setNotes(request.notes());
+        SalesReturn salesReturn = salesReturnRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Sales return not found with ID: " + id
+                ));
 
-    salesReturn.setTotal(
-            newTotal.setScale(2, RoundingMode.HALF_UP)
-    );
+        // Reverse the stock increase caused by this return.
+        for (SalesReturnItem returnItem : salesReturn.getItems()) {
 
-    return toResponse(salesReturnRepo.save(salesReturn));
-}
-
-@Transactional
-public void delete(Long id) {
-
-    SalesReturn salesReturn = salesReturnRepo.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Sales return not found with ID: " + id
-            ));
-
-    // Reverse the stock increase caused by this return.
-    for (SalesReturnItem returnItem : salesReturn.getItems()) {
-
-        int updated = itemRepo.decreaseStock(
-                returnItem.getItem().getId(),
-                returnItem.getQty()
-        );
-
-        if (updated == 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Cannot delete this return because some returned stock "
-                            + "has already been sold or removed."
+            int updated = itemRepo.decreaseStock(
+                    returnItem.getItem().getId(),
+                    returnItem.getQty()
             );
+
+            if (updated == 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Cannot delete this return because some returned stock "
+                                + "has already been sold or removed."
+                );
+            }
         }
+
+        // Delete only this return and its return lines.
+        // The original sale and sale items remain untouched.
+        salesReturnRepo.delete(salesReturn);
     }
 
-    // Only the return and its return lines are deleted.
-    // The original sale and sale items remain untouched.
-    salesReturnRepo.delete(salesReturn);
-}
-
+    // GET ALL SALES RETURNS
     @Transactional(readOnly = true)
     public List<SalesReturnResponse> findAll() {
 
@@ -360,6 +376,7 @@ public void delete(Long id) {
                 .toList();
     }
 
+    // GET SALES RETURNS BY SALE ID
     @Transactional(readOnly = true)
     public List<SalesReturnResponse> findBySaleId(Long saleId) {
 
@@ -376,6 +393,7 @@ public void delete(Long id) {
                 .toList();
     }
 
+    // GET ONE SALES RETURN
     @Transactional(readOnly = true)
     public SalesReturnResponse findById(Long id) {
 
@@ -388,6 +406,7 @@ public void delete(Long id) {
         return toResponse(salesReturn);
     }
 
+    // MAP ENTITY TO RESPONSE DTO
     private SalesReturnResponse toResponse(SalesReturn salesReturn) {
 
         List<SalesReturnResponse.Line> lines = new ArrayList<>();

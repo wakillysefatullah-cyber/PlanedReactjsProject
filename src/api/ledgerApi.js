@@ -1,6 +1,27 @@
 
 const API_URL = "http://localhost:8080/api/ledgers";
 
+async function getErrorMessage(response, fallbackMessage) {
+    const responseText = await response.text();
+
+    if (!responseText) {
+        return fallbackMessage;
+    }
+
+    try {
+        const errorData = JSON.parse(responseText);
+
+        return errorData.detail
+            || errorData.message
+            || errorData.error
+            || errorData.title
+            || fallbackMessage;
+
+    } catch {
+        return responseText;
+    }
+}
+
 export async function getLedgers(search = "") {
     const url = new URL(API_URL);
 
@@ -11,7 +32,9 @@ export async function getLedgers(search = "") {
     const response = await fetch(url);
 
     if (!response.ok) {
-        throw new Error("Failed to load ledgers");
+        throw new Error(
+            await getErrorMessage(response, "Failed to load ledgers")
+        );
     }
 
     return response.json();
@@ -28,7 +51,9 @@ export async function createLedger(ledger) {
     });
 
     if (!response.ok) {
-        throw new Error("Failed to create ledger");
+        throw new Error(
+            await getErrorMessage(response, "Failed to create ledger")
+        );
     }
 
     return response.json();
@@ -45,7 +70,9 @@ export async function updateLedger(id, ledger) {
     });
 
     if (!response.ok) {
-        throw new Error("Failed to update ledger");
+        throw new Error(
+            await getErrorMessage(response, "Failed to update ledger")
+        );
     }
 
     return response.json();
@@ -58,6 +85,8 @@ export async function deleteLedger(id) {
     });
 
     if (!response.ok) {
-        throw new Error("Failed to delete ledger");
+        throw new Error(
+            await getErrorMessage(response, "Failed to delete ledger")
+        );
     }
 }

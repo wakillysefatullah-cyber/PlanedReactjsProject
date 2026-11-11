@@ -21,6 +21,7 @@ export default function Purchase() {
     const [paid, setPaid] = useState("");
 
     const [editId, setEditId] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -83,8 +84,13 @@ export default function Purchase() {
     async function handleSubmit(e) {
         e.preventDefault();
 
-        if (!supplierId || !itemName.trim() ||
-            quantity === "" || price === "" || paid === "") {
+        if (
+            !supplierId ||
+            !itemName.trim() ||
+            quantity === "" ||
+            price === "" ||
+            paid === ""
+        ) {
             alert("Please fill out all required fields.");
             return;
         }
@@ -155,7 +161,9 @@ export default function Purchase() {
         const lines = getPurchaseLines(purchase);
 
         if (lines.length !== 1) {
-            alert("This form currently edits purchases containing exactly one item.");
+            alert(
+                "This form currently edits purchases containing exactly one item."
+            );
             return;
         }
 
@@ -172,38 +180,58 @@ export default function Purchase() {
     }
 
     async function handleDelete(id) {
+        console.log("DELETE CLICKED - Purchase ID:", id);
+
         const confirmed = window.confirm(
             "Are you sure you want to delete this purchase? Its purchased quantity will be removed from stock."
         );
 
-        if (!confirmed) return;
+        if (!confirmed) {
+            console.log("Purchase deletion cancelled.");
+            return;
+        }
 
         try {
+            setDeletingId(id);
             setError("");
+
+            console.log("Sending DELETE request for purchase:", id);
+
             await deletePurchase(id);
 
-            if (editId === id) clearForm();
+            if (editId === id) {
+                clearForm();
+            }
 
             await loadData();
+
             alert("Purchase deleted successfully!");
+            console.log("Purchase deleted successfully:", id);
         } catch (err) {
+            console.error("Purchase deletion failed:", err);
             alert(err.message || "Could not delete purchase.");
+        } finally {
+            setDeletingId(null);
         }
     }
 
     const totalPurchaseAmount = purchases.reduce(
-        (sum, purchase) => sum + Number(purchase.total || 0), 0
+        (sum, purchase) => sum + Number(purchase.total || 0),
+        0
     );
 
     const totalPaid = purchases.reduce(
-        (sum, purchase) => sum + Number(purchase.paid || 0), 0
+        (sum, purchase) => sum + Number(purchase.paid || 0),
+        0
     );
 
     const totalBorrowed = purchases.reduce(
         (sum, purchase) =>
-            sum + Number(
+            sum +
+            Number(
                 purchase.borrow ??
-                (Number(purchase.total || 0) - Number(purchase.paid || 0))
+                (Number(purchase.total || 0) -
+                    Number(purchase.paid || 0))
             ),
         0
     );
@@ -212,7 +240,9 @@ export default function Purchase() {
         return (
             <section className="p-6">
                 <h1 className="text-3xl font-bold">Purchase</h1>
-                <p className="mt-4 text-gray-500">Loading purchase data...</p>
+                <p className="mt-4 text-gray-500">
+                    Loading purchase data...
+                </p>
             </section>
         );
     }
@@ -227,7 +257,10 @@ export default function Purchase() {
                     </p>
                 </div>
 
-                <Link to="/" className="bg-black text-white px-5 py-2 rounded-md">
+                <Link
+                    to="/"
+                    className="bg-black text-white px-5 py-2 rounded-md"
+                >
                     &lt;&lt; Back
                 </Link>
             </div>
@@ -245,7 +278,10 @@ export default function Purchase() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-wrap gap-4 mb-6">
+            <form
+                onSubmit={handleSubmit}
+                className="flex flex-wrap gap-4 mb-6"
+            >
                 <select
                     value={supplierId}
                     onChange={(e) => setSupplierId(e.target.value)}
@@ -253,6 +289,7 @@ export default function Purchase() {
                     required
                 >
                     <option value="">Select supplier</option>
+
                     {ledgers.map((ledger) => (
                         <option key={ledger.id} value={ledger.id}>
                             {ledger.name}
@@ -326,8 +363,15 @@ export default function Purchase() {
             </form>
 
             <div className="mb-6 bg-gray-50 p-4 rounded-md">
-                <p><strong>Purchase total:</strong> {formatMoney(total)} AF</p>
-                <p><strong>Borrowed:</strong> {formatMoney(borrowed)} AF</p>
+                <p>
+                    <strong>Purchase total:</strong>{" "}
+                    {formatMoney(total)} AF
+                </p>
+
+                <p>
+                    <strong>Borrowed:</strong>{" "}
+                    {formatMoney(borrowed)} AF
+                </p>
             </div>
 
             <div className="overflow-x-auto">
@@ -350,53 +394,93 @@ export default function Purchase() {
                     <tbody>
                         {purchases.length === 0 ? (
                             <tr>
-                                <td colSpan="10" className="p-6 text-gray-500">
+                                <td
+                                    colSpan="10"
+                                    className="p-6 text-gray-500"
+                                >
                                     No purchases recorded yet.
                                 </td>
                             </tr>
                         ) : (
-                            purchases.flatMap((purchase, purchaseIndex) =>
-                                getPurchaseLines(purchase).map((line, lineIndex) => (
-                                    <tr
-                                        key={`${purchase.id}-${lineIndex}`}
-                                        className="border-b"
-                                    >
-                                        <td className="p-3">{purchaseIndex + 1}</td>
-                                        <td className="p-3">{purchase.invoiceDate}</td>
-                                        <td className="p-3">{purchase.ledgerName}</td>
-                                        <td className="p-3">{line.itemName}</td>
-                                        <td className="p-3">{line.qty}</td>
-                                        <td className="p-3">{formatMoney(line.price)} AF</td>
-                                        <td className="p-3 text-green-600">
-                                            {formatMoney(purchase.paid)} AF
-                                        </td>
-                                        <td className="p-3 text-red-600">
-                                            {formatMoney(
-                                                purchase.borrow ??
-                                                (Number(purchase.total) - Number(purchase.paid))
-                                            )} AF
-                                        </td>
-                                        <td className="p-3 font-semibold">
-                                            {formatMoney(purchase.total)} AF
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleEdit(purchase)}
-                                                className="bg-black text-white px-3 py-1 rounded mr-2"
+                            purchases.flatMap(
+                                (purchase, purchaseIndex) =>
+                                    getPurchaseLines(purchase).map(
+                                        (line, lineIndex) => (
+                                            <tr
+                                                key={`${purchase.id}-${lineIndex}`}
+                                                className="border-b"
                                             >
-                                                Edit
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDelete(purchase.id)}
-                                                className="bg-red-600 text-white px-3 py-1 rounded"
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
+                                                <td className="p-3">
+                                                    {purchaseIndex + 1}
+                                                </td>
+
+                                                <td className="p-3">
+                                                    {purchase.invoiceDate}
+                                                </td>
+
+                                                <td className="p-3">
+                                                    {purchase.ledgerName}
+                                                </td>
+
+                                                <td className="p-3">
+                                                    {line.itemName}
+                                                </td>
+
+                                                <td className="p-3">
+                                                    {line.qty}
+                                                </td>
+
+                                                <td className="p-3">
+                                                    {formatMoney(line.price)} AF
+                                                </td>
+
+                                                <td className="p-3 text-green-600">
+                                                    {formatMoney(purchase.paid)} AF
+                                                </td>
+
+                                                <td className="p-3 text-red-600">
+                                                    {formatMoney(
+                                                        purchase.borrow ??
+                                                        (Number(purchase.total) -
+                                                            Number(purchase.paid))
+                                                    )} AF
+                                                </td>
+
+                                                <td className="p-3 font-semibold">
+                                                    {formatMoney(purchase.total)} AF
+                                                </td>
+
+                                                <td className="p-3 whitespace-nowrap">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleEdit(purchase)
+                                                        }
+                                                        className="bg-black text-white px-3 py-1 rounded mr-2"
+                                                    >
+                                                        Edit
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled={deletingId === purchase.id}
+                                                        onClick={() => {
+                                                            console.log(
+                                                                "DELETE BUTTON CLICKED:",
+                                                                purchase.id
+                                                            );
+                                                            handleDelete(purchase.id);
+                                                        }}
+                                                        className="bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {deletingId === purchase.id
+                                                            ? "Deleting..."
+                                                            : "Delete"}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    )
                             )
                         )}
                     </tbody>

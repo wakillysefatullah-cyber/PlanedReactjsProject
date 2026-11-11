@@ -32,5 +32,16 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Modifying(flushAutomatically = true)
     @Query("update Item i set i.stockQty = i.stockQty + :q, i.purchasePrice = :p where i.id = :id")
-    int receiveStock(@Param("id") Long id, @Param("q") BigDecimal q, @Param("p") BigDecimal p);
+    int receiveStock(
+            @Param("id") Long id,
+            @Param("q") BigDecimal q,
+            @Param("p") BigDecimal p
+    );
+
+    @Modifying(flushAutomatically = true)
+    @Query("update Item i set i.purchasePrice = :p where i.id = :id")
+    int updatePurchasePrice(
+            @Param("id") Long id,
+            @Param("p") BigDecimal p
+    );
 }
