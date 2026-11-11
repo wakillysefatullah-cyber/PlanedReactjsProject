@@ -89,4 +89,5 @@ export async function deleteLedger(id) {
             await getErrorMessage(response, "Failed to delete ledger")
         );
     }
+
 }
