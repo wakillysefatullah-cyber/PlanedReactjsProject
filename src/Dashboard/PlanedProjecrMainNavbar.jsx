@@ -1,5 +1,6 @@
 import SalesOverview from './SalesOverview.jsx'
 import PlanedProjecrMainBody from './PlanedProjectManinBody';
+import {User} from 'lucide-react'
 
 export default function PlanedProjecrMainNavbar(){
 
@@ -9,19 +10,15 @@ export default function PlanedProjecrMainNavbar(){
                 <div className="flex relative items-center">
                     <span className="absolute ml-5">
                         <img src="public/search.svg"  alt="can not " />
+                        
                     </span>
                     <input type="search" className="w-[700px] border h-12 mx-4 rounded-full p-1 pl-8"
                     placeholder="Search..." />
                 </div>
                 <div className="flex gap-3 ">
-                    <img src="public/sefatullah.jpg" className="size-12 rounded-full" alt="" />
+                    <User size={30} className='outline outline-offset-4 rounded-full'/>
                     <div>
-                        <select className="font-bold font-serif items-center">
-                            <option value="set">Sefatullah</option>
-                            <option value="set">Ahmadullah</option>
-                            <option value="set">Saleh</option>
-                            <option value="set">Shams</option>
-                        </select>
+                        <p className='font-bold font-serif text-lg'>Admin</p>
                     </div>
                 </div>
              </div>

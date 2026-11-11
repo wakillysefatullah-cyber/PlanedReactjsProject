@@ -289,9 +289,9 @@ export default function Repor() {
                 <h1 className="text-center text-4xl my-8 px-4 font-bold font-serif">
                     Manage your
                     <span className="text-amber-500 text-4xl">
-                        {" "}Reports
-                    </span>
-                    professionally
+                        {" "}Reports 
+                    </span> 
+                    {" "}professionally
                 </h1>
 
                 <div className="mt-8">

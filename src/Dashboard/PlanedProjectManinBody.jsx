@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-
+import { TrendingUp, ShoppingCart, ReceiptText, Wallet } from "lucide-react";
 import { getSales } from "../api/saleApi.js";
 import { getPurchases } from "../api/purchaseApi.js";
 import { getSalesReturns } from "../api/salesReturnApi.js";
@@ -84,11 +84,12 @@ export default function PlanedProjecrMainBody() {
             {/* total sales */}
             <div className="flex gap-3 w-[300px] h-auto p-5 rounded-md bg-olive-50 shadow-2xl outline-4 outline-olive-100">
                 <div>
-                    <img
+                    {/* <img
                         src="/totalSales.png"
                         className="mr-10"
                         alt="can not load image"
-                    />
+                    /> */}
+                    <TrendingUp size={35} className="mr-10 text-emerald-600"/>
                 </div>
 
                 <div>
@@ -100,18 +101,19 @@ export default function PlanedProjecrMainBody() {
                         {loading ? "Loading..." : error ? "Unavailable" : formatAmount(totalSales)}
                     </p>
 
-                    <p className="font-serif text-end">AF</p>
+                    <p className="font-serif text-end">AFN</p>
                 </div>
             </div>
 
             {/* total purchases */}
             <div className="flex gap-3 w-[300px] h-auto p-5 rounded-md bg-olive-50 shadow-2xl outline-4 outline-olive-100">
                 <div>
-                    <img
+                    {/* <img
                         src="/totalPurchases.png"
                         className="mr-10"
                         alt="can not load image"
-                    />
+                    /> */}
+                    <ShoppingCart size={35} className="mr-10 text-emerald-600"/>
                 </div>
 
                 <div>
@@ -123,18 +125,19 @@ export default function PlanedProjecrMainBody() {
                         {loading ? "Loading..." : error ? "Unavailable" : formatAmount(totalPurchases)}
                     </p>
 
-                    <p className="font-serif text-end">AF</p>
+                    <p className="font-serif text-end">AFN</p>
                 </div>
             </div>
 
             {/* total Expenses */}
             <div className="flex gap-3 w-[300px] h-auto p-5 rounded-md bg-olive-50 shadow-2xl outline-4 outline-olive-100">
                 <div>
-                    <img
+                    {/* <img
                         src="/totalExpenses.png"
                         className="mr-10"
                         alt="can not load image"
-                    />
+                    /> */}
+                    <ReceiptText size={35} className="mr-10 text-emerald-600"/>
                 </div>
 
                 <div>
@@ -143,21 +146,22 @@ export default function PlanedProjecrMainBody() {
                     </h1>
 
                     <p className="font-bold text-2xl text-emerald-500">
-                        <q>1100</q>
+                        1100
                     </p>
 
-                    <p className="font-serif text-end">AF</p>
+                    <p className="font-serif text-end">AFN</p>
                 </div>
             </div>
 
             {/* Cash balance */}
             <div className="flex gap-3 w-[300px] h-auto p-5 rounded-md bg-olive-50 shadow-2xl outline-4 outline-olive-100">
                 <div>
-                    <img
+                    {/* <img
                         src="/totalCash.png"
                         className="mr-10"
                         alt="can not load image"
-                    />
+                    /> */}
+                    <Wallet size={35} className="mr-10 text-emerald-600 "/>
                 </div>
 
                 <div>
@@ -166,10 +170,10 @@ export default function PlanedProjecrMainBody() {
                     </h1>
 
                     <p className="font-bold text-2xl text-emerald-500">
-                        <q>9000</q>
+                        9000
                     </p>
 
-                    <p className="font-serif text-end">AF</p>
+                    <p className="font-serif text-end">AFN</p>
                 </div>
             </div>
 
